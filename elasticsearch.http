@@ -1,0 +1,177 @@
+# Create customer index
+PUT http://localhost:9200/customers
+
+###
+
+# Create product index
+PUT http://localhost:9200/products
+
+###
+
+# Create order index
+PUT http://localhost:9200/orders
+
+###
+
+# Show all indices
+GET http://localhost:9200/_cat/indices?v
+
+###
+
+# Delete index
+DELETE http://localhost:9200/customers
+
+###
+
+# Dynamic mapping: auto define structure in first insert
+# Mapping date format
+# Get mapping index, show structure and rules
+GET http://localhost:9200/orders/_mapping
+
+###
+
+# Mapping date format
+PUT http://localhost:9200/customers/_mapping
+Content-Type: application/json
+
+{
+    "date_detection": true,
+    "dynamic_date_formats": [
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd",
+        "yyyy/MM/dd HH:mm:ss",
+        "yyyy/MM/dd"
+    ]
+}
+
+###
+
+# Mapping number format
+PUT http://localhost:9200/customers/_mapping
+Content-Type: application/json
+
+{
+    "numeric_detection": true
+}
+
+###
+
+# Insert / create data
+POST http://localhost:9200/customers/_create/1
+Content-Type: application/json
+
+{
+    "name": "Angga Ari",
+    "email": "angga@mail.com",
+    "registered_at": "2023-10-10",
+    "is_active": true
+}
+
+###
+
+POST http://localhost:9200/products/_create/1
+Content-Type: application/json
+
+{
+    "product_name": "Macbook Air M2 16GB 256GB",
+    "variant": "midnight",
+    "price": "22500000"
+}
+
+###
+
+POST http://localhost:9200/products/_create/2
+Content-Type: application/json
+
+{
+    "product_name": "Asus Zen book 1TB",
+    "variant": "black",
+    "price": 1245000
+}
+
+###
+
+POST http://localhost:9200/orders/_create/1
+Content-Type: application/json
+
+{
+    "order_date": "2023/10/12 12:30:12",
+    "customer_id": "1",
+    "total": "1540000",
+    "items": [
+        {
+            "product_id": 1,
+            "price": 1200000,
+            "quantity": 2
+        },
+        {
+            "product_id": 2,
+            "price": 340000,
+            "quantity": 5
+        }
+    ]
+}
+
+###
+
+# Get data
+GET http://localhost:9200/customers/_doc/1
+
+###
+
+# Not found
+GET http://localhost:9200/customers/_doc/not-found
+
+###
+
+# Get source / original data without metadata and no _id
+GET http://localhost:9200/customers/_source/1
+
+###
+
+# Check data if exists of not
+HEAD http://localhost:9200/customers/_doc/1
+
+###
+
+# Multiget
+POST http://localhost:9200/products/_mget
+Content-Type: application/json
+
+{
+    "ids": ["1", "2"]
+}
+
+###
+
+# Multiget cross index
+POST http://localhost:9200/_mget
+Content-Type: application/json
+
+{
+    "docs": [
+        {
+            "_id": 1,
+            "_index": "orders"
+        },
+        {
+            "_id": 1,
+            "_index": "customers"
+        }
+    ]
+}
+
+###
+
+# Search
+POST http://localhost:9200/products/_search
+
+###
+
+# Pagination
+POST http://localhost:9200/products/_search?size=10&from=0
+
+###
+
+# Sort
+POST http://localhost:9200/products/_search?sort=price:asc
