@@ -1,0 +1,7 @@
+{"create": {"_index": "customers", "_id": "5"}}
+{"name": "Angga Junior", "register_at": "2023-01-01 12:34:23"}
+{"index": {"_index": "customers", "_id": "6"}}
+{"name": "Evander Alastair", "register_at": "2023-01-02 03:22:00"}
+{"update": {"_index": "customers", "_id": "6"}}
+{"doc": {"name": "Keenan Alastair"}}
+{"delete": {"_index": "customers", "_id": "6"}}

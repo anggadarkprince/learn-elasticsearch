@@ -22,7 +22,7 @@
     },
     "contacts: [
         {
-            type: "whatsapp",
+            type: "whatsapp primary",
             value: "2853423"
         },
         {
@@ -42,7 +42,7 @@
     "emails": ["angga.aw92@mail.com", "angga123@mail"],
     "location.city": ["Surabaya"],
     "location.country": ["Indonesia"],
-    "contacts.type": ["whatsapp", "phone"],
+    "contacts.type": ["whatsapp", "primary", "phone"],
     "contacts.value: ["2853423"] // only single because other value is same
 }
 ```
@@ -76,6 +76,10 @@ DELETE http://localhost:9200/customers
 # Elasticsearch API
 ## Create API
 - store data into index `POST / PUT /<index>/_create/<id>`
+{
+    field: value
+}
+- will return conflict response when id is exist, see Index API
 
 ## Get API
 - get data with metadata `GET /<index>/_doc/<id>`
@@ -87,7 +91,19 @@ DELETE http://localhost:9200/customers
 
 ## Multiget API
 - get from all index `POST /_mget`
+{
+    "docs": [
+        {
+            "_id": 1,
+            "_index": "orders"
+        },
+        ...
+    ]
+}
 - get from specific index `POST /<index>/_mget`
+{
+    "ids": ["1", "2", ...]
+}
 
 ## Search API
 - `POST /_search`
@@ -101,3 +117,50 @@ DELETE http://localhost:9200/customers
 - `<field>:<direction>`
 - direction can be `asc` or `desc`
 - for multi sort using coma (,) as separator: `field1:asc,field2:desc`
+
+## Index API for create and update
+- Create if not exist and update if exist (replace)
+- `POST /<index>/_doc/<id>`
+{
+    field: value
+}
+
+## Update API for edit some field of document (not replaced)
+- `POST /<index>/_update/<id>`
+{
+    "doc": {
+        field: value
+    }
+}
+
+## Delete API to delete document
+- `DELETE /<index>/_doc/<id>`
+
+## Bulk API
+- `POST /_bulk`
+- `POST /<index>/_bulk`
+
+## Alias
+- alias for index, usefull when we have multiple version of index, client mention the index rather than direct index name
+- `POST /_aliases`
+{
+    "actions": [
+        {"add": {"alias": "customer", "index": "customers"}},
+        {"remove": {"alias": "customer", "index": "customers"}}
+    ]
+}
+
+## Reindex API
+- Copy data index to new index
+- `POST /_reindex`
+{
+    "source": {"index": "orders"},
+    "dest": {"index": "order_v2"}
+}
+
+## Source Field
+- Elasticsearch store data into lucine document but add original json in `_source` key
+- Size of document will be doubled (lucine doc + original json data)
+- Filter field in parameter, search or get (_doc, _source) API
+- `_search?_source_includes`: include fields of document
+- `_doc/<id>?_source_excludes`: exclude fields of document

@@ -175,3 +175,403 @@ POST http://localhost:9200/products/_search?size=10&from=0
 
 # Sort
 POST http://localhost:9200/products/_search?sort=price:asc
+
+###
+
+# Index API for create or update
+POST http://localhost:9200/products/_doc/3
+Content-Type: application/json
+
+{
+    "name": "Mie Goreng",
+    "variant": "Goreng",
+    "price": 230000
+}
+
+###
+
+# Update API to update some field
+POST http://localhost:9200/products/_update/3
+Content-Type: application/json
+
+{
+    "doc": {
+        "price": 30000
+    }
+}
+
+###
+
+# Delete API
+DELETE http://localhost:9200/products/_doc/4
+
+###
+
+# Bulk API
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< bulk.json
+#{"create": {"_index": "customers", "_id": "5"}}
+#{"name": "Angga Junior", "register_at": "2023-01-01 12:34:23"}
+#{"index": {"_index": "customers", "_id": "6"}}
+#{"name": "Evander Alastair", "register_at": "2023-01-02 03:22:00"}
+#{"update": {"_index": "customers", "_id": "6"}}
+#{"doc": {"name": "Keenan Alastair"}}
+#{"delete": {"_index": "customers", "id": 5}}
+
+###
+
+# Alias API
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+    "actions": [
+        {
+            "add": {
+                "alias": "customer",
+                "index": "customers"
+            }
+        },
+        {
+            "add": {
+                "alias": "order",
+                "index": "orders"
+            }
+        }
+    ]
+}
+
+###
+
+# Find out alias
+GET http://localhost:9200/_aliases
+
+###
+
+# Delete alias
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+    "actions": [
+        {
+            "remove": {
+                "alias": "customer",
+                "index": "customers"
+            }
+        }
+    ]
+}
+
+###
+
+# Search by alias
+GET http://localhost:9200/order/_search
+
+###
+
+# Reindex
+# Create new index
+PUT http://localhost:9200/orders_v2
+
+###
+
+PUT http://localhost:9200/orders_v2/_mapping
+Content-Type: application/json
+
+{
+    "numeric_detection": true,
+    "date_detection": true,
+    "dynamic_date_formats": [
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd",
+        "yyyy/MM/dd HH:mm:ss",
+        "yyyy/MM/dd"
+    ]
+}
+
+###
+
+# Using reindex from orders to orders_v2
+POST http://localhost:9200/_reindex
+Content-Type: application/json
+
+{
+    "source": {
+        "index": "orders"
+    },
+    "dest": {
+        "index": "orders_v2"
+    }
+}
+
+###
+
+# Check the result
+GET http://localhost:9200/orders_v2/_search
+
+###
+
+# Update alias order
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+    "actions": [
+        {
+            "add": {
+                "alias": "order",
+                "index": "orders_v2"
+            }
+        },
+        {
+            "remove": {
+                "alias": "order",
+                "index": "orders"
+            }
+        }
+    ]
+}
+
+###
+
+# Search with alias
+GET http://localhost:9200/order/_search
+
+###
+
+# Include & exclude field
+GET http://localhost:9200/order/_search?_source_includes=customer_id,order_date,total
+
+###
+
+GET http://localhost:9200/order/_source/1?_source_excludes=price,items
+
+###
+
+# Manual mapping
+# Create new index
+PUT http://localhost:9200/customers_v2
+
+###
+
+PUT http://localhost:9200/customers_v2/_mapping
+Content-Type: application/json
+
+{
+    "numeric_detection": true,
+    "date_detection": true,
+    "dynamic_date_formats": [
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd",
+        "yyyy/MM/dd HH:mm:ss",
+        "yyyy/MM/dd"
+    ],
+    "properties": {
+        "username": {
+            "type": "keyword"
+        },
+        "first_name": {
+            "type": "text"
+        },
+        "last_name": {
+            "type": "text"
+        },
+        "email": {
+            "type": "keyword"
+        },
+        "gender": {
+            "type": "keyword"
+        },
+        "birth_date": {
+            "type": "date",
+            "format": "yyyy-MM-dd"
+        }
+    }
+}
+
+###
+
+# Add alias for customer_V2
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+    "actions": [
+        {
+            "add": {
+                "alias": "customer",
+                "index": "customers_v2"
+            }
+        }
+    ]
+}
+
+###
+
+# Insert customer data
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< customers.json
+
+###
+
+# Check customer data
+POST http://localhost:9200/customer/_search
+
+###
+
+# Object field
+# Update mapping
+PUT http://localhost:9200/customers_v2/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "address": {
+            "properties": {
+                "street": {
+                    "type": "text"
+                },
+                "city": {
+                    "type": "text"
+                },
+                "province": {
+                    "type": "text"
+                },
+                "country": {
+                    "type": "text"
+                },
+                "zip_code": {
+                    "type": "keyword"
+                }
+            }
+        }
+    }
+}
+
+###
+
+# Update customer data with address
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< customers-with-address.json
+
+###
+
+# Array of Object
+# Update mapping array
+PUT http://localhost:9200/customers_v2/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "hobbies": {
+            "type": "text"
+        },
+        "banks": {
+            "properties": {
+                "name": {
+                    "type": "text"
+                },
+                "account_number": {
+                    "type": "keyword"
+                }
+            }
+        }
+    }
+}
+
+###
+
+# Update customer data with hobby and bank
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< customers-with-hobby-and-bank.json
+
+###
+
+# Query
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "match_all": {}
+    }
+}
+
+###
+
+# Search using match_all
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "match_all": {}
+    },
+    "size": 20,
+    "from": 0,
+    "sort": [
+        {
+            "username": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
+###
+
+# Term query (type keyword exact search, case sensitive)
+# cannot use in "text" data type
+
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "term": {
+            "gender": "Female"
+        }
+    },
+    "size": 20,
+    "from": 0,
+    "sort": [
+        {
+            "username": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
+###
+
+# Match query (type text, using text analysis, auto lower case)
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "match": {
+            "banks.name": "bca"
+        }
+    },
+    "size": 20,
+    "from": 0,
+    "sort": [
+        {
+            "username": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
