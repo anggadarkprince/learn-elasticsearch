@@ -1,0 +1,31 @@
+### Update API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
+# --------------------------------------------
+
+# Update API to update some field
+POST http://localhost:9200/products/_update/3
+Content-Type: application/json
+
+{
+    "doc": {
+        "price": 30000
+    }
+}
+
+
+
+
+### Update By Query API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html
+# --------------------------------------------
+
+# update all data by query to trigger multi field value
+POST http://localhost:9200/products/_update_by_query
+Content-Type: application/json
+
+{
+    "query": {
+        "match_all": {
+        }
+    }
+}

@@ -1,0 +1,35 @@
+### Delete API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html
+# --------------------------------------
+
+# 1.1 Delete item
+DELETE http://localhost:9200/products/_doc/4
+
+
+
+### Delete By Query API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
+# --------------------------------------
+
+# 2.1 Delete by query
+POST http://localhost:9200/categories/_delete_by_query
+Content-Type: application/json
+
+{
+    "query": {
+        "match": {
+            "name": "invalid"
+        }
+    }
+}
+
+###
+# 2.2 Delete all
+POST http://localhost:9200/categories/_delete_by_query
+Content-Type: application/json
+
+{
+    "query": {
+        "match_all": {}
+    }
+}

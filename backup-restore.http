@@ -1,0 +1,86 @@
+
+### Snapshot (backup cluster)
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshot-restore.html
+# ------------------------------------------------------
+
+# change elasticsearch.yml -> path.repo: backup-path
+# Create snapshot repo
+POST http://localhost:9200/_snapshot/first_backup
+Content-Type: application/json
+
+{
+    "type": "fs",
+    "settings": {
+        "location": "first_backup" // backup-path/first_backup
+    }
+}
+
+### Get all snaphot
+GET http://localhost:9200/_snapshot
+
+### Perform snapshot
+PUT http://localhost:9200/_snapshot/first_backup/snapshot1
+Content-Type: application/json
+
+{
+    "indices": [],
+    "metadata": {
+        "taken_by": "Angga",
+        "desciption": "Backup daily",
+        "other_info": "anything"
+    }
+}
+
+### Get snaphot
+GET http://localhost:9200/_snapshot/first_backup/snapshot1
+
+### Get snaphot via CAT API
+GET http://localhost:9200/_cat/snapshots?v=true
+
+
+
+### Restore snapshot
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-restore-snapshot.html
+# ------------------------------------------------------
+# 1. Delete all categories
+POST http://localhost:9200/categories/_delete_by_query
+Content-Type: application/json
+
+{
+    "query": {
+        "match_all": {}
+    }
+}
+
+###
+# 2. Check categories
+POST http://localhost:9200/categories/_search
+
+###
+# 3. Close index before restore (prevent read/write)
+POST http://localhost:9200/categories/_close
+
+###
+# 4. Restore categories
+POST http://localhost:9200/_snapshot/first_backup/snapshot1/_restore
+Content-Type: application/json
+
+{
+    "indices": [
+        "categories"
+    ]
+}
+
+###
+# 5. Open index after restore
+POST http://localhost:9200/categories/_open
+
+
+
+### Delete snapshot
+# 1.1 Delete snapshot in repo
+DELETE http://localhost:9200/_snapshot/first_backup/snapshot1
+
+###
+# 1.2 Delete repo
+DELETE http://localhost:9200/_snapshot/first_backup

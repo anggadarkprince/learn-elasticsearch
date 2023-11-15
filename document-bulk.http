@@ -1,0 +1,22 @@
+# Bulk API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
+# ---------------------------------------
+
+# 1.1 Buik operation from file
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< bulk.json
+
+###
+# 1.2 Bulk from request body (required to add new line in end of file)
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+#{"create": {"_index": "customers", "_id": "5"}}
+#{"name": "Angga Junior", "register_at": "2023-01-01 12:34:23"}
+#{"index": {"_index": "customers", "_id": "6"}}
+#{"name": "Evander Alastair", "register_at": "2023-01-02 03:22:00"}
+#{"update": {"_index": "customers", "_id": "6"}}
+#{"doc": {"name": "Keenan Alastair"}}
+#{"delete": {"_index": "customers", "id": 5}}

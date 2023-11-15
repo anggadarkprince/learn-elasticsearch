@@ -1,0 +1,55 @@
+### Get document API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html
+# --------------------------------------
+
+# Get data by id
+GET http://localhost:9200/customers/_doc/1
+
+###
+
+# Not found
+GET http://localhost:9200/customers/_doc/not-found
+
+###
+
+# Get source / original data without metadata and _id
+GET http://localhost:9200/customers/_source/1
+
+###
+
+# Check data if exists of not
+HEAD http://localhost:9200/customers/_doc/1
+# or HEAD http://localhost:9200/customers/_source/1
+
+
+
+### Multiget API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-multi-get.html
+# --------------------------------------
+
+# 2.1 Multi-Get from single index
+POST http://localhost:9200/products/_mget
+Content-Type: application/json
+
+{
+    "ids": ["1", "2"]
+}
+
+###
+
+# 2.2 Multi-Get from multiple index
+POST http://localhost:9200/_mget
+Content-Type: application/json
+
+{
+    "docs": [
+        {
+            "_id": 1,
+            "_index": "orders"
+        },
+        {
+            "_id": 1,
+            "_index": "customers"
+        }
+    ]
+}

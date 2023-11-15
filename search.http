@@ -1,0 +1,389 @@
+### Search API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html
+# ------------------------------------------
+
+# Search in one index
+POST http://localhost:9200/products/_search
+# or using get if no data passed GET http://localhost:9200/products/_search
+# similar with {
+#    "query": {
+#        "match_all": {}
+#    }
+# }
+
+###
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multiple-indices.html
+# ------------------------------------------
+
+# Search multiple index
+# POST http://localhost:9200/products,users/_search
+# POST http://localhost:9200/ticket-*/_search
+# POST http://localhost:9200/*/_search
+# POST http://localhost:9200/_all/_search
+POST http://localhost:9200/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "username": "username3"
+    }
+  }
+}
+
+###
+
+# Pagination
+POST http://localhost:9200/products/_search?size=10&from=0
+# or passing in request body 
+# {
+#    "size": 10,
+#    "from": 0,
+#    "sort": [
+#        {"price": {"order": "desc"}}
+#    ]
+# }
+
+###
+
+# Sort, for keyword sorting will be order lexicographically
+# eg: 1000 in front 999, should change to 0999 then 1000 (or using type number for simpliciy)
+POST http://localhost:9200/products/_search?sort=price:asc
+
+###
+# Include field
+GET http://localhost:9200/order/_search?_source_includes=customer_id,order_date,total
+
+###
+# Exclude field
+GET http://localhost:9200/order/_source/1?_source_excludes=price,items
+# or GET http://localhost:9200/order/_doc/1?_source_excludes=price,items
+# or GET http://localhost:9200/order/_search?_source_excludes=price,items
+
+###
+
+###
+
+# Term query (type keyword exact search, case sensitive)
+# cannot use in "text" data type
+# do not apply Standard Analyzer, so the value must exact match
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "term": {
+            "gender": "Female"
+        }
+    },
+    "size": 20,
+    "from": 0,
+    "sort": [
+        {
+            "username": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
+###
+
+# Match query (type text, using text analysis, auto lower case)
+# convert string "angga@mail.com" = ["angga", "mail", "com"]
+# "bca digial" = ["bca", "digital"]
+# cannot search with angga@mail.com but "angga", "mail" or "com"
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "match": {
+            "banks.name": "bca"
+        }
+    },
+    "size": 20,
+    "from": 0,
+    "sort": [
+        {
+            "username": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
+###
+
+# by default operator match using "OR"
+# if we want to match all string "bca digital", using "AND"
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "match": {
+            "banks.name": {
+                "query": "bca digital",
+                "operator": "AND"
+            }
+        }
+    },
+    "size": 20,
+    "from": 0,
+    "sort": [
+        {
+            "username": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
+###
+
+# Terms query similar "like" in SQL
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "terms": {
+            "username": [
+                "Username1", // not found, because type keyword should match (case sensitive)
+                "username2",
+                "username3"
+            ]
+        }
+    }
+}
+
+###
+
+# Boolean query
+# search in multiple fields: must, filter, must_not, should
+
+# must query: where hobbies = 'gaming' AND banks.name LIKE '%bca%'
+# calculate relevancies / score
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "term": {
+                        "hobbies": "gaming" // should lowercase because text document converted to lucine doc
+                    }
+                },
+                {
+                    "term": {
+                        "banks.name": "bca"
+                    }
+                }/*,
+                {
+                    "match": {
+                        "banks.name": {
+                            "query": "bca digital",
+                            "operator": "AND"
+                        }
+                    }
+                }*/ // if should match bca digital
+            ]
+        }
+    }
+}
+
+###
+
+# must query: not calculate score / relevancies, manual sort,
+# where hobbies = 'gaming' AND banks.name = 'bca digital'
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "filter": [
+                {
+                    "term": {
+                        "hobbies": "gaming"
+                    }
+                },
+                {
+                    "match": {
+                        "banks.name": {
+                            "query": "bca digital",
+                            "operator": "AND"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "sort": [
+        {
+            "username": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
+###
+
+# must not query: where hobbies != 'gaming' AND banks.name != 'bca digital;
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "must_not": [
+                {
+                    "term": {
+                        "hobbies": "gaming"
+                    }
+                },
+                {
+                    "match": {
+                        "banks.name": {
+                            "query": "bca digital",
+                            "operator": "AND"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
+
+###
+
+# should query: WHERE banks.name = 'bca' OR banks.name = 'bni'
+# contains score / relevancy
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            //"must": [],
+            //"filter": [],
+            //"must_not": [],
+            "should": [
+                {
+                    "term": {
+                        "banks.name": "bca"
+                    }
+                },
+                {
+                    "term": {
+                        "banks.name": "bni"
+                    }
+                }
+            ]
+        }
+    }
+}
+
+# minimum_should_match by default has value 1 (one of condition should match / or operator) 
+# by default if we add must and should, the should is not required to match at least one condition (ignored / minimum_should_match set to 0)
+# if we want to keep condition "must" + "should" (at least one match), set minimum_should_match back to 1
+
+###
+
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "term": {
+                        "hobbies": "gaming"
+                    }
+                }
+            ],
+            "should": [
+                {
+                    "term": {
+                        "banks.name": "bca"
+                    }
+                },
+                {
+                    "term": {
+                        "banks.name": "bni"
+                    }
+                }
+            ],
+            "minimum_should_match": 1, // can be increased to 2, 3 (total should match)
+        }
+    }
+}
+
+###
+
+# Explain API
+POST http://localhost:9200/customer/_explain/username126
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "term": {
+                        "hobbies": "gaming"
+                    }
+                }
+            ],
+            "should": [
+                {
+                    "term": {
+                        "banks.name": "bca"
+                    }
+                },
+                {
+                    "term": {
+                        "banks.name": "bni"
+                    }
+                }
+            ],
+            "minimum_should_match": 1
+        }
+    }
+}
+
+###
+
+# Boost score, to manipulate scoring
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "should": [
+                {
+                    "term": {
+                        "banks.name": {
+                            "value": "bca",
+                            "boost": 0, // last priority
+                        }
+                    }
+                },
+                {
+                    "term": {
+                        "banks.name": {
+                            "value": "bni",
+                            "boost": 2 // increase score to multiply
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

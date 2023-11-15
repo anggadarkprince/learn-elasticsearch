@@ -1,0 +1,19 @@
+
+### Cat API (Compact and aligned text), check data, stats, nodes
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/cat.html
+# -------------------------------------------
+
+GET http://localhost:9200/_cat
+Content-Type: application/json
+
+###
+GET http://localhost:9200/_cat/indices?v=true
+Content-Type: application/json
+
+###
+GET http://localhost:9200/_cat/aliases?v=true
+Content-Type: application/json
+
+###
+GET http://localhost:9200/_cat/nodes?v=true
+Content-Type: application/json

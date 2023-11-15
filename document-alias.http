@@ -1,0 +1,51 @@
+### Alias API
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/aliases.html
+# --------------------------------------
+
+# Alias API
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+    "actions": [
+        {
+            "add": {
+                "alias": "customer",
+                "index": "customers"
+            }
+        },
+        {
+            "add": {
+                "alias": "order",
+                "index": "orders"
+            }
+        }
+    ]
+}
+
+###
+
+# Find out alias
+GET http://localhost:9200/_aliases
+
+###
+
+# Delete alias
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+    "actions": [
+        {
+            "remove": {
+                "alias": "customer",
+                "index": "customers"
+            }
+        }
+    ]
+}
+
+###
+
+# Search by alias
+GET http://localhost:9200/order/_search

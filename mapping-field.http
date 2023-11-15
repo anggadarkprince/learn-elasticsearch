@@ -1,0 +1,382 @@
+
+###
+
+# Flattened type, merge all field value and stored as key
+# can be anything input to the field
+PUT http://localhost:9200/customer/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "labels": {
+            "type": "flattened"
+        }
+    }
+}
+
+###
+
+GET http://localhost:9200/customer/_mapping
+
+###
+
+POST http://localhost:9200/customer/_update/username1
+Content-Type: application/json
+
+{
+    "doc": {
+        "labels": { // can be anything inside labels fields
+            "priority": "vip",
+            "discount": "10% discount",
+            "complaint": "Always complaint"
+        }
+    }
+}
+
+# labels : ['vip', '10', discount', 'Always' 'complaint']
+# stored as keyword, not turn into lowercase
+
+###
+
+GET http://localhost:9200/customer/_doc/username1
+
+###
+
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "term": {
+            "labels": "vip"
+        }
+    }
+}
+
+###
+
+# search vip and regular customer (nested object search)
+POST http://localhost:9200/customer/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "should": [
+                {
+                    "term": {
+                        "labels.priority": "vip"
+                    }
+                },
+                {
+                    "term": {
+                        "labels.priority": "regular"
+                    }
+                }
+            ]
+        }
+    }
+}
+
+###
+
+# search vip and regular customer (nested object search)
+PUT http://localhost:9200/parents
+
+###
+
+# Nested field, special data type to store object in array independently (not flattened regular lucine doc)
+# elasticsearch create hidden field, expensive process, only use if necessary,
+# create alternative structure data to prevent of using "nested type" 
+
+PUT http://localhost:9200/parents/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "first_name": {
+            "type": "text"
+        },
+        "last_name": {
+            "type": "text"
+        },
+        "children": {
+            "properties": {
+                "first_name": {
+                    "type": "text"
+                },
+                "last_name": {
+                    "type": "text"
+                },
+                "full_name": { // alternative to query first name and last name, prevent using "nested type"
+                    "type": "text"
+                }
+            }
+        }
+    }
+}
+
+###
+
+GET http://localhost:9200/parents/_mapping
+
+###
+
+POST http://localhost:9200/parents/_doc/1
+Content-Type: application/json
+
+{
+    "first_name": "angga",
+    "last_name": "ari",
+    "children": [
+        {
+            "first_name": "keenan",
+            "last_name": "evander"
+        },
+        {
+            "first_name": "diana",
+            "last_name": "eka"
+        }
+    ]
+}
+
+###
+
+# search children first name "keenan" and last name "eka"
+# shouln't found, but because lucine document is flattened value, it's found
+POST http://localhost:9200/parents/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "match": {
+                        "children.first_name": "keenan"
+                    }
+                },
+                {
+                    "match": {
+                        "children.last_name": "eka"
+                    }
+                }
+            ]
+        }
+    }
+}
+
+###
+
+# recreate mapping to use type "nested"
+
+DELETE http://localhost:9200/parents
+
+###
+
+PUT http://localhost:9200/parents
+
+###
+
+
+PUT http://localhost:9200/parents/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "first_name": {
+            "type": "text"
+        },
+        "last_name": {
+            "type": "text"
+        },
+        "children": {
+            "type": "nested",
+            "properties": {
+                "first_name": {
+                    "type": "text"
+                },
+                "last_name": {
+                    "type": "text"
+                }
+            }
+        }
+    }
+}
+
+# try to insert doc above and query with nested query
+# type data nested cannot query with normal query above, using special query
+
+###
+
+POST http://localhost:9200/parents/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "nested": {
+            "path": "children",
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "match": {
+                                "children.first_name": "keenan"
+                            }
+                        },
+                        {
+                            "match": {
+                                "children.last_name": "eka"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
+
+###
+
+# Multi fields
+# create some fields from one field
+# eg: create a field "name" and use multi field with different type
+# name as "text" and name as "keyword" (because "text" cannot be sorted, rather than create 2 field and maintain the value)
+
+PUT http://localhost:9200/categories
+
+###
+
+PUT http://localhost:9200/categories/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "name": {
+            "type": "text",
+            "fields": {
+                "raw": {
+                    "type": "keyword"
+                },
+                "xxx": {
+                    "type": "text"
+                }
+            }
+        }
+    }
+}
+
+###
+
+GET http://localhost:9200/categories/_mapping
+
+###
+
+POST http://localhost:9200/categories/_doc/1
+Content-Type: application/json
+
+{
+    "name": "Macbook Air M2"
+}
+
+###
+
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "match": {
+            "name": "macbook" // search part or string
+        }
+    },
+    /*"sort": [
+        {
+            "name": {
+                "order": "asc"
+            }
+        }
+    ]*/ // text data type cannot be search,
+    "sort": [
+        {
+            "name.raw": { // sort using other type
+                "order": "asc"
+            }
+        }
+    ]
+}
+
+###
+
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "match": {
+            "name.raw": "Macbook Air M2" // sort exact
+        }
+    },
+    "sort": [
+        {
+            "name.raw": {
+                "order": "asc"
+            }
+        }
+    ]
+}
+
+###
+
+# Update by query
+# when we have existing data and add multi field (or in other case new field / mapping),
+# old data not automatically insert alternative type
+# without recreate new index
+
+GET http://localhost:9200/products/_mapping
+
+###
+
+PUT http://localhost:9200/products/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "name": {
+            "type": "text",
+            "fields": {
+                "raw": {
+                    "type": "keyword"
+                }
+            }
+        }
+    }
+}
+
+###
+
+# update all data by query to trigger multi field value
+POST http://localhost:9200/products/_update_by_query
+Content-Type: application/json
+
+{
+    "query": {
+        "match_all": {
+        }
+    }
+}
+
+###
+
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+    "query": {
+        "term": {
+            "name.raw": "Mie Goreng"
+        }
+    }
+}
+
+###

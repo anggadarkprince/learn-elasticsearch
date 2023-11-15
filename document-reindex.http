@@ -1,0 +1,66 @@
+### Reindex (copy indices)
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html
+# ----------------------------------------------
+
+# 1.1 Create new index
+PUT http://localhost:9200/orders_v2
+
+###
+# 1.2 Define mapping orders_v2
+PUT http://localhost:9200/orders_v2/_mapping
+Content-Type: application/json
+
+{
+    "numeric_detection": true,
+    "date_detection": true,
+    "dynamic_date_formats": [
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd",
+        "yyyy/MM/dd HH:mm:ss",
+        "yyyy/MM/dd"
+    ]
+}
+
+###
+# 1.3 Using reindex from orders to orders_v2 (copy data)
+POST http://localhost:9200/_reindex
+Content-Type: application/json
+
+{
+    "source": {
+        "index": "orders"
+    },
+    "dest": {
+        "index": "orders_v2"
+    }
+}
+
+###
+# 1.4 Check the result in new index
+GET http://localhost:9200/orders_v2/_search
+
+###
+# 1.5 Update alias "order" to pointing the new index
+POST http://localhost:9200/_aliases
+Content-Type: application/json
+
+{
+    "actions": [
+        {
+            "add": {
+                "alias": "order",
+                "index": "orders_v2"
+            }
+        },
+        {
+            "remove": {
+                "alias": "order",
+                "index": "orders"
+            }
+        }
+    ]
+}
+
+###
+# 1.6 Try to search with alias
+GET http://localhost:9200/order/_search

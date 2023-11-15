@@ -1,0 +1,77 @@
+
+# Search after (replacement of Scoll API)
+
+POST http://localhost:9200/categories/_mapping
+Content-Type: application/json
+
+{
+    "properties": {
+        "id": {
+            "type": "keyword"
+        }
+    }
+}
+
+###
+
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+< categories.json
+
+###
+
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+    "size": 100,
+    "from": 10001, // error, by default max result 10k
+    "query": {
+        "match_all": {}
+    }
+}
+
+###
+
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+    "size": 100,
+    "from": 0,
+    "query": {
+        "match_all": {}
+    },
+    "sort": [
+        {
+            "id": {
+                "order": "asc"
+            }
+        }
+    ]
+} // result last value 10087
+
+###
+# Next query use 10087 as params after
+
+POST http://localhost:9200/categories/_search
+Content-Type: application/json
+
+{
+    "size": 100,
+    "from": 0,
+    "query": {
+        "match_all": {}
+    },
+    "sort": [
+        {
+            "id": {
+                "order": "asc"
+            }
+        }
+    ],
+    "search_after": [
+        "10087"
+    ]
+}

@@ -1,0 +1,85 @@
+### Create API (Not allowed when data is exist before)
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html
+# --------------------------------------
+
+# Insert / create document
+POST http://localhost:9200/customers/_create/1
+Content-Type: application/json
+
+{
+    "name": "Angga Ari",
+    "email": "angga@mail.com",
+    "registered_at": "2023-10-10",
+    "is_active": true
+}
+
+###
+# Insert using PUT method
+PUT http://localhost:9200/products/_create/11
+Content-Type: application/json
+
+{
+    "product_name": "Macbook Air M2 16GB 256GB",
+    "variant": "midnight",
+    "price": "22500000"
+}
+
+###
+# Add more document (error when same id exists)
+POST http://localhost:9200/products/_create/2
+Content-Type: application/json
+
+{
+    "product_name": "Asus Zen book 1TB",
+    "variant": "black",
+    "price": 1245000
+}
+
+###
+# Insert nested document / embeded
+POST http://localhost:9200/orders/_create/1
+Content-Type: application/json
+
+{
+    "order_date": "2023/10/12 12:30:12",
+    "customer_id": "1",
+    "total": "1540000",
+    "items": [
+        {
+            "product_id": 1,
+            "price": 1200000,
+            "quantity": 2
+        },
+        {
+            "product_id": 2,
+            "price": 340000,
+            "quantity": 5
+        }
+    ]
+}
+
+
+
+### Create document of update if exists (but replace entire doc)
+# --------------------------------------
+
+# 1.1 Index API for create or replace
+POST http://localhost:9200/products/_doc/3
+Content-Type: application/json
+
+{
+    "name": "Mie Goreng",
+    "variant": "Goreng",
+    "price": 230000
+}
+
+###
+# 1.2 Update API to update some fields
+POST http://localhost:9200/products/_update/3
+Content-Type: application/json
+
+{
+    "doc": {
+        "price": 30000
+    }
+}

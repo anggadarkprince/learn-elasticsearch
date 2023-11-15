@@ -1,0 +1,52 @@
+### Create index
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html
+# --------------------------------------
+
+# 1.1 Create customer index
+PUT http://localhost:9200/customers
+
+###
+# 1.2 Create product index
+PUT http://localhost:9200/products
+
+###
+# 1.3 Create order index (with explicit index)
+PUT http://localhost:9200/orders2
+Content-Type: application/json
+
+{
+  "mappings": {
+    "properties": {
+      "order_date":    { "type": "date" },  
+      "customer_id":  { "type": "integer"  }, 
+      "total":   { "type": "integer"  },
+      "items": {
+        "properties": {
+            "product_id": { "type": "integer" },
+            "price": { "type": "integer" },
+            "quantity": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
+
+
+
+### Get index
+# --------------------------------------
+GET http://localhost:9200/customers
+
+
+
+### Show all indices
+# --------------------------------------
+GET http://localhost:9200/_cat/indices?v=true
+
+
+
+### Delete index
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-delete-index.html
+# --------------------------------------
+# Delete index
+DELETE http://localhost:9200/customers
